@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PotholeAI – AI-Powered Road Damage Detection & Reporting System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <i class="bi bi-cone-striped text-warning fs-3 me-2"></i>
+                <span class="text-dark">Pothole<span class="text-primary">AI</span></span>
+                <span class="brand-ai-badge">YOLOv8</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="report.html">Report Pothole</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="map.html">Live Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="my-complaints.html">My Complaints</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin.html">Admin Dashboard</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center" id="navUserContainer">
+                    <!-- Injected by api.js -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container position-relative">
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-7">
+                    <span class="badge bg-primary bg-opacity-25 text-info border border-primary px-3 py-2 rounded-pill fw-semibold mb-3">
+                        <i class="bi bi-cpu-fill me-1"></i> Autonomous Deep Learning Road Inspection
+                    </span>
+                    <h1 class="hero-title mb-4">
+                        Smarter, Safer Roads with <span class="text-primary">AI-Powered</span> Pothole Detection.
+                    </h1>
+                    <p class="hero-subtitle mb-4">
+                        Report road damage in seconds. Our pre-trained YOLO vision models instantly analyze road surface defects, calculate severity, pinpoint GPS coordinates, and alert municipal authorities via real-time Telegram channels.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="report.html" class="btn btn-primary btn-lg px-4 py-3 fw-bold shadow-sm">
+                            <i class="bi bi-camera-fill me-2"></i> Report a Pothole
+                        </a>
+                        <a href="map.html" class="btn btn-outline-light btn-lg px-4 py-3 fw-semibold">
+                            <i class="bi bi-geo-alt-fill me-2 text-danger"></i> View Live Map
+                        </a>
+                    </div>
+
+                    <!-- Quick metrics ticker -->
+                    <div class="row mt-5 pt-3 border-top border-secondary border-opacity-25 text-start g-4">
+                        <div class="col-4">
+                            <h3 class="fw-bold mb-0 text-white">96.8%</h3>
+                            <small class="text-secondary">YOLO Accuracy</small>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="fw-bold mb-0 text-white">&lt; 1.2s</h3>
+                            <small class="text-secondary">AI Inference Time</small>
+                        </div>
+                        <div class="col-4">
+                            <h3 class="fw-bold mb-0 text-white">Instant</h3>
+                            <small class="text-secondary">Telegram Dispatch</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-lg rounded-4 overflow-hidden bg-dark text-white p-3">
+                        <div class="d-flex justify-content-between align-items-center pb-2 border-bottom border-secondary border-opacity-50">
+                            <div class="small fw-bold text-success"><i class="bi bi-activity me-1"></i> AI Neural Vision Stream</div>
+                            <span class="badge bg-danger">HIGH SEVERITY</span>
+                        </div>
+                        <div class="position-relative my-2 rounded-3 overflow-hidden" style="max-height: 280px; background: #000;">
+                            <img src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=700&q=80" alt="Road with Pothole" class="img-fluid w-100 object-fit-cover" style="opacity: 0.85;">
+                            <!-- Simulated overlay bounding box -->
+                            <div style="position: absolute; top: 40%; left: 25%; width: 50%; height: 42%; border: 3px solid #ef4444; border-radius: 4px; background: rgba(239,68,68,0.15);">
+                                <span class="badge bg-danger position-absolute" style="top: -24px; left: -2px;">
+                                    Pothole #1 | 94.2% | HIGH
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-2 small">
+                            <div class="d-flex justify-content-between text-secondary mb-1">
+                                <span>Model: YOLOv8 Ultralytics</span>
+                                <span>GPS: 12.9716° N, 77.5946° E</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-white">
+                                <span>Location: MG Road, Bengaluru</span>
+                                <span class="text-warning">Status: PENDING</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="py-5 bg-white">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="text-primary fw-bold text-uppercase small tracking-wider">Automated Workflow</span>
+                <h2 class="fw-bold mt-2">How PotholeAI Works</h2>
+                <p class="text-muted col-lg-6 mx-auto">From citizen upload to AI severity scoring and municipal repair tracking in four seamless steps.</p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon-wrapper bg-primary bg-opacity-10 text-primary mx-auto">
+                            <i class="bi bi-camera"></i>
+                        </div>
+                        <h5 class="fw-bold">1. Capture & Tag</h5>
+                        <p class="text-muted small">Citizen takes a road photo. GPS automatically retrieves the exact coordinates and street landmark.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon-wrapper bg-info bg-opacity-10 text-info mx-auto">
+                            <i class="bi bi-cpu"></i>
+                        </div>
+                        <h5 class="fw-bold">2. YOLO Vision AI</h5>
+                        <p class="text-muted small">Python FastAPI runs pre-trained YOLO inference to locate bounding boxes and calculate confidence scores.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon-wrapper bg-warning bg-opacity-10 text-warning mx-auto">
+                            <i class="bi bi-speedometer"></i>
+                        </div>
+                        <h5 class="fw-bold">3. Severity Scoring</h5>
+                        <p class="text-muted small">Image size-based heuristic engine rates damage as <b>Low</b>, <b>Medium</b>, or <b>High</b> danger.</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card text-center">
+                        <div class="feature-icon-wrapper bg-success bg-opacity-10 text-success mx-auto">
+                            <i class="bi bi-telegram"></i>
+                        </div>
+                        <h5 class="fw-bold">4. Telegram & Action</h5>
+                        <p class="text-muted small">Java Spring Boot dispatches real-time Telegram alerts to maintenance teams for rapid repair dispatch.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Architecture & Technology Stack -->
+    <section class="py-5 bg-light">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <span class="text-primary fw-bold text-uppercase small">Full-Stack Engineering</span>
+                <h2 class="fw-bold mt-2">Enterprise-Grade Microservice Architecture</h2>
+            </div>
+
+            <div class="row g-4 align-items-stretch">
+                <div class="col-md-4">
+                    <div class="p-4 bg-white rounded-4 border h-100 shadow-sm">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-window-fullscreen fs-2 text-primary me-3"></i>
+                            <h5 class="fw-bold mb-0">Frontend Client</h5>
+                        </div>
+                        <p class="text-muted small">Responsive HTML5, CSS3, modern Bootstrap 5 and Leaflet Map for interactive GPS positioning, dynamic AI overlays, and citizen status tracking.</p>
+                        <div class="badge bg-light text-dark border">Bootstrap 5</div>
+                        <div class="badge bg-light text-dark border">Leaflet JS</div>
+                        <div class="badge bg-light text-dark border">OpenStreetMap</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-4 bg-white rounded-4 border h-100 shadow-sm">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-server fs-2 text-success me-3"></i>
+                            <h5 class="fw-bold mb-0">Spring Boot Backend</h5>
+                        </div>
+                        <p class="text-muted small">Java Spring Boot REST API handles secure JWT authentication, multipart file uploads, MySQL relational persistence, unique complaint code generation, and Telegram notification dispatch.</p>
+                        <div class="badge bg-light text-dark border">Java 17+</div>
+                        <div class="badge bg-light text-dark border">Spring Data JPA</div>
+                        <div class="badge bg-light text-dark border">MySQL</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-4 bg-white rounded-4 border h-100 shadow-sm">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-robot fs-2 text-danger me-3"></i>
+                            <h5 class="fw-bold mb-0">Python AI Service</h5>
+                        </div>
+                        <p class="text-muted small">FastAPI microservice running YOLO deep learning model. Detects road fractures, draws labeled bounding boxes, calculates confidence, and classifies defect severity.</p>
+                        <div class="badge bg-light text-dark border">Python 3.10+</div>
+                        <div class="badge bg-light text-dark border">FastAPI</div>
+                        <div class="badge bg-light text-dark border">Ultralytics YOLO</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <div class="d-flex justify-content-center align-items-center mb-2">
+                <i class="bi bi-cone-striped text-warning fs-4 me-2"></i>
+                <span class="fw-bold text-dark fs-5">Pothole<span class="text-primary">AI</span></span>
+            </div>
+            <p class="text-muted small mb-0">AI-Powered Road Damage Detection and Reporting System &copy; 2026. Built with Spring Boot, Python FastAPI & YOLO.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+</body>
+</html>

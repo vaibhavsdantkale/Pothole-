@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Complaints – PotholeAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <i class="bi bi-cone-striped text-warning fs-3 me-2"></i>
+                <span class="text-dark">Pothole<span class="text-primary">AI</span></span>
+                <span class="brand-ai-badge">YOLOv8</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="report.html">Report Pothole</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="map.html">Live Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="my-complaints.html">My Complaints</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin.html">Admin Dashboard</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center" id="navUserContainer">
+                    <!-- User info injected here -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Page Title & Actions -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill">
+                    <i class="bi bi-person-check-fill me-1"></i> Citizen Complaint Tracker
+                </span>
+                <h2 class="fw-bold mt-2 mb-1">My Reported Complaints</h2>
+                <p class="text-muted small mb-0">Track real-time municipal inspection and repair progress for your reported potholes.</p>
+            </div>
+            <a href="report.html" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Report New Pothole
+            </a>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white p-3">
+            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm active filter-btn" data-status="ALL">All (<span id="countAll">0</span>)</button>
+                    <button type="button" class="btn btn-outline-warning btn-sm filter-btn" data-status="PENDING">Pending (<span id="countPending">0</span>)</button>
+                    <button type="button" class="btn btn-outline-info btn-sm filter-btn" data-status="IN_PROGRESS">In Progress (<span id="countInProgress">0</span>)</button>
+                    <button type="button" class="btn btn-outline-success btn-sm filter-btn" data-status="RESOLVED">Resolved (<span id="countResolved">0</span>)</button>
+                </div>
+                <div class="input-group input-group-sm" style="max-width: 250px;">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control bg-light border-start-0" placeholder="Search complaint ID or street...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Complaints Table / Cards List -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table custom-table table-hover mb-0" id="complaintsTable">
+                    <thead>
+                        <tr>
+                            <th>Complaint ID</th>
+                            <th>Road Photo</th>
+                            <th>Location</th>
+                            <th>AI Detection</th>
+                            <th>Severity</th>
+                            <th>Status</th>
+                            <th>Reported Date</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaintsList">
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                Loading complaints...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complaint Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-bottom px-4 pt-4 pb-3">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                        Complaint Details: <span class="text-primary font-monospace" id="modalDetailId">PH-XXXX</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <!-- Left: Images -->
+                        <div class="col-md-7">
+                            <ul class="nav nav-pills nav-fill mb-2 bg-light p-1 rounded-3" id="imageTabs">
+                                <li class="nav-item">
+                                    <button class="nav-link active py-1 small" data-bs-toggle="tab" data-bs-target="#tabAnnotated">AI YOLO Detection</button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link py-1 small" data-bs-toggle="tab" data-bs-target="#tabRaw">Original Photo</button>
+                                </li>
+                            </ul>
+                            <div class="tab-content border rounded-3 overflow-hidden bg-dark text-center" style="min-height: 260px;">
+                                <div class="tab-pane fade show active p-1" id="tabAnnotated">
+                                    <img id="detailAnnotatedImg" src="" class="img-fluid rounded" alt="YOLO Detection" style="max-height: 320px;">
+                                </div>
+                                <div class="tab-pane fade p-1" id="tabRaw">
+                                    <img id="detailRawImg" src="" class="img-fluid rounded" alt="Raw Road Image" style="max-height: 320px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Complaint Metadata -->
+                        <div class="col-md-5">
+                            <div class="p-3 bg-light rounded-3 border mb-3">
+                                <div class="small text-muted mb-1">Status</div>
+                                <div id="detailStatusBadge" class="mb-3">-</div>
+
+                                <div class="small text-muted mb-1">AI Severity Assessment</div>
+                                <div id="detailSeverityBadge" class="mb-3">-</div>
+
+                                <div class="small text-muted mb-1">AI Detection & Confidence</div>
+                                <div class="fw-semibold text-dark mb-3" id="detailConfidence">-</div>
+
+                                <div class="small text-muted mb-1">Location</div>
+                                <div class="fw-semibold text-dark mb-1" id="detailLocation">-</div>
+                                <div class="small text-muted font-monospace" id="detailCoords">-</div>
+                            </div>
+
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="small text-muted fw-bold mb-1"><i class="bi bi-chat-left-dots text-primary me-1"></i> Municipal Remarks:</div>
+                                <p class="small text-muted mb-0" id="detailRemarks">No administrative notes recorded yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/complaints.js"></script>
+</body>
+</html>

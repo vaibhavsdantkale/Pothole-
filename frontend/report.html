@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Pothole – PotholeAI</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <!-- EXIF.js for auto-extracting GPS from uploaded camera photos -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+    <style>
+        /* GPS Camera Modal Styles */
+        .camera-viewport-container {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+            height: 460px;
+        }
+        #gpsCameraVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .camera-hud-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.6), transparent);
+            color: #ffffff;
+            padding: 1rem 1.25rem 4.5rem 1.25rem;
+            pointer-events: none;
+        }
+        .camera-shutter-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+        .btn-shutter {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: #ef4444;
+            border: 4px solid #ffffff;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+        .btn-shutter:active {
+            transform: scale(0.92);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <i class="bi bi-cone-striped text-warning fs-3 me-2"></i>
+                <span class="text-dark">Pothole<span class="text-primary">AI</span></span>
+                <span class="brand-ai-badge">YOLOv8</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active text-primary" href="report.html">Report Pothole</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="map.html">Live Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="my-complaints.html">My Complaints</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin.html">Admin Dashboard</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center" id="navUserContainer">
+                    <!-- User info injected here -->
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Page Header -->
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+            <div>
+                <span class="badge bg-primary bg-opacity-10 text-primary fw-semibold px-3 py-2 rounded-pill">
+                    <i class="bi bi-camera-reels-fill me-1"></i> AI Road Damage Inspection
+                </span>
+                <h2 class="fw-bold mt-2 mb-1">Report a Road Pothole</h2>
+                <p class="text-muted small mb-0">Use Live GPS Camera or file upload to detect road hazards with real-time GPS geotagging.</p>
+            </div>
+
+            <!-- Top Actions: GPS Camera & Google Maps config -->
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-danger btn-sm px-3 shadow-sm" id="btnOpenGpsCamera">
+                    <i class="bi bi-camera-fill me-1"></i> <b>Live GPS Camera</b>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#gmapsKeyModal">
+                    <i class="bi bi-google me-1"></i> Google Maps Key
+                </button>
+            </div>
+        </div>
+
+        <!-- EXIF Geotag Auto-Detect Alert Banner (Triggered when photo has GPS metadata) -->
+        <div id="exifAlertBanner" class="alert alert-success d-none py-2 px-3 small d-flex align-items-center mb-3 rounded-3" role="alert">
+            <i class="bi bi-check-circle-fill fs-5 me-2 text-success"></i>
+            <div>
+                <b>GPS Auto-Extracted from Camera Photo!</b> Coordinates and map pin have been automatically synced to the exact photo capture location.
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left Column: Form & Map Picker -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <form id="reportForm">
+                        <!-- Step 1: Image Upload / Live Camera -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">
+                                    <span>1. Road Photo Capture <span class="text-danger">*</span></span>
+                                </label>
+                                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold" style="font-size: 0.75rem;" id="btnLaunchCamInline">
+                                    <i class="bi bi-camera-fill me-1"></i> Open GPS Camera
+                                </button>
+                            </div>
+
+                            <div class="upload-dropzone mb-2" id="dropzone">
+                                <i class="bi bi-cloud-arrow-up text-primary fs-1 mb-2 d-block"></i>
+                                <span class="fw-semibold text-dark">Click to select, drag & drop, or snap with GPS camera</span>
+                                <p class="text-muted small mb-0 mt-1">Photos taken with smartphone cameras auto-extract GPS metadata!</p>
+                                <input type="file" id="imageInput" class="d-none" accept="image/*">
+                            </div>
+
+                            <!-- Sample Quick Preset Buttons -->
+                            <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+                                <span class="small text-muted fw-semibold">Quick test photos:</span>
+                                <button type="button" class="btn btn-sm btn-outline-danger py-1" onclick="loadSamplePreset('high')">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Severe Pothole
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-warning py-1" onclick="loadSamplePreset('medium')">
+                                    <i class="bi bi-circle-half me-1"></i> Moderate Pothole
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-success py-1" onclick="loadSamplePreset('clean')">
+                                    <i class="bi bi-check-circle me-1"></i> Clean Road
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Location and GPS Section -->
+                        <div class="mb-4 p-3 bg-light rounded-4 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">
+                                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> 2. GPS Location & Road Coordinates
+                                </label>
+                                <div class="d-flex gap-1">
+                                    <button type="button" class="btn btn-sm btn-primary py-1 px-2" id="btnDetectGps">
+                                        <i class="bi bi-crosshair me-1"></i> Detect GPS
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Quick 1-Click GPS Preset Chips -->
+                            <div class="mb-3">
+                                <div class="small text-muted mb-1 fw-semibold" style="font-size: 0.75rem;">QUICK LOCATION CHIPS:</div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" onclick="setGpsPreset(12.9716, 77.5946, 'MG Road Central, Bengaluru')">📍 MG Road</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" onclick="setGpsPreset(12.9569, 77.7011, 'Outer Ring Road, Marathahalli')">📍 Outer Ring Road</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" onclick="setGpsPreset(12.9783, 77.6408, 'Indiranagar 100ft Road')">📍 Indiranagar</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" onclick="setGpsPreset(12.9698, 77.7499, 'Whitefield Main Road')">📍 Whitefield</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" onclick="setGpsPreset(28.6328, 77.2197, 'Connaught Place, New Delhi')">📍 New Delhi</button>
+                                </div>
+                            </div>
+
+                            <!-- Address Input with Search -->
+                            <div class="input-group mb-2">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-geo-alt"></i></span>
+                                <input type="text" id="locationInput" class="form-control border-start-0" placeholder="Street Name, Landmark, City" value="MG Road Central, Bengaluru" required>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" id="btnSearchAddress">
+                                    <i class="bi bi-search me-1"></i> Search
+                                </button>
+                            </div>
+
+                            <!-- GPS Lat & Lng Input Fields -->
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white text-muted">Latitude</span>
+                                        <input type="number" step="any" id="latitudeInput" class="form-control" value="12.971600" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white text-muted">Longitude</span>
+                                        <input type="number" step="any" id="longitudeInput" class="form-control" value="77.594600" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Interactive Map Picker with Clear Instructions -->
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-semibold text-primary">
+                                    <i class="bi bi-hand-index-thumb me-1"></i> Click map or drag pin to position:
+                                </span>
+                                <span id="gpsToast" class="badge bg-success d-none py-1">📍 GPS Updated!</span>
+                            </div>
+                            <div id="pickerMap" class="rounded-3 border shadow-sm" style="height: 300px; min-height: 300px; background: #e5e7eb;"></div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" id="btnSubmitReport" class="btn btn-primary w-100 py-3 fw-bold fs-6 shadow-sm">
+                            <span id="btnSubmitSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
+                            <i class="bi bi-send-fill me-2"></i> Submit Complaint & Trigger AI
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column: AI Analysis & Live Bounding Box Preview -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-cpu text-primary me-2"></i> AI Detection & Severity Preview
+                        </h5>
+                        <span id="aiStatusBadge" class="badge bg-secondary">Awaiting Image</span>
+                    </div>
+
+                    <!-- Image Display Box -->
+                    <div class="preview-box d-flex align-items-center justify-content-center p-2 mb-3" style="min-height: 280px;">
+                        <img id="previewImage" src="" alt="Road Preview" class="d-none">
+                        <div id="previewPlaceholder" class="text-center text-muted p-4">
+                            <i class="bi bi-card-image fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                            <span>Upload a road photo or snap with GPS camera to run YOLO AI detection</span>
+                        </div>
+                    </div>
+
+                    <!-- AI Results Card -->
+                    <div id="aiResultsContainer" class="d-none">
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="row text-center g-2 mb-3">
+                                <div class="col-4">
+                                    <div class="small text-muted fw-semibold">Potholes</div>
+                                    <div class="fs-4 fw-bold text-dark" id="resPotholeCount">0</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted fw-semibold">Confidence</div>
+                                    <div class="fs-4 fw-bold text-primary" id="resConfidence">0%</div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="small text-muted fw-semibold">Severity</div>
+                                    <div class="mt-1" id="resSeverityBadge">
+                                        <span class="badge bg-secondary">NONE</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="progress" style="height: 8px;">
+                                <div id="resProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Informational Alert Box -->
+                        <div id="aiMessageAlert" class="alert alert-info py-2 small d-flex align-items-center mb-0" role="alert">
+                            <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+                            <span id="aiMessageText">Image analyzed successfully.</span>
+                        </div>
+                    </div>
+
+                    <!-- Realtime Feature Highlights -->
+                    <div class="mt-auto pt-3 border-top small text-muted">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span>Live GPS Camera with Watermark Stamp Overlay</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span>EXIF Camera Metadata Auto-Location Parser</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <span>Google Maps & Leaflet GIS Dual Integration</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIVE GPS CAMERA MODAL -->
+    <div class="modal fade" id="gpsCameraModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg bg-dark text-white overflow-hidden">
+                <div class="modal-header border-secondary border-opacity-50 px-4 py-3">
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-danger me-2"><i class="bi bi-record-fill me-1"></i> REC</span>
+                        <h5 class="modal-title fw-bold mb-0">GPS Map Camera – Live Road Geotagging</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" id="btnCloseCamera"></button>
+                </div>
+
+                <div class="modal-body p-0 position-relative">
+                    <div class="camera-viewport-container">
+                        <video id="gpsCameraVideo" autoplay playsinline muted></video>
+
+                        <!-- Live GPS Telemetry HUD Overlay -->
+                        <div class="camera-hud-overlay">
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-danger me-2" style="font-size: 0.7rem;">📍 GPS LIVE</span>
+                                <span class="fw-bold text-white small" id="hudAddress">Locating current road...</span>
+                            </div>
+                            <div class="font-monospace small text-info fw-semibold mb-1" id="hudCoords">
+                                Lat: 12.971600° N, Long: 77.594600° E
+                            </div>
+                            <div class="small text-secondary" style="font-size: 0.75rem;" id="hudTime">
+                                Initializing telemetry...
+                            </div>
+                        </div>
+
+                        <!-- Shutter Button -->
+                        <div class="camera-shutter-bar">
+                            <button type="button" class="btn-shutter" id="btnCapturePhoto" title="Capture & Geotag Photo">
+                                <i class="bi bi-camera-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-secondary border-opacity-50 py-2 px-4 justify-content-between">
+                    <span class="small text-white-50"><i class="bi bi-info-circle me-1"></i> Captures high-res photo with embedded GPS banner watermark</span>
+                    <button type="button" class="btn btn-outline-light btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Maps API Key Configuration Modal -->
+    <div class="modal fade" id="gmapsKeyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header border-bottom px-4 pt-4 pb-3">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-google text-primary me-2"></i> Google Maps API Key</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small">Enter your Google Maps JavaScript API Key to enable official Google Maps Street View, Satellite, and Roadmaps.</p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Google Maps API Key</label>
+                        <input type="text" id="inputGoogleMapsKey" class="form-control" placeholder="AIzaSy...">
+                        <div class="form-text small">Stored securely in your local browser storage.</div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearGoogleMapsKey()">Clear Key</button>
+                        <button type="button" class="btn btn-primary btn-sm px-4" onclick="saveGoogleMapsKey()">Save & Enable Google Maps</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complaint Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg p-3">
+                <div class="modal-body text-center p-4">
+                    <div class="feature-icon-wrapper bg-success bg-opacity-10 text-success mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h4 class="fw-bold">Complaint Submitted!</h4>
+                    <p class="text-muted small mb-3">Your pothole report and GPS coordinates have been saved and queued for municipal repair inspection.</p>
+
+                    <div class="p-3 bg-light rounded-3 border text-start mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Complaint ID:</span>
+                            <span class="fw-bold font-monospace text-primary" id="modalComplaintId">PH-2026-XXXXX</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">AI Severity:</span>
+                            <span id="modalSeverity">HIGH</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Status:</span>
+                            <span class="badge bg-warning text-dark">PENDING</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Location:</span>
+                            <span class="small fw-semibold text-truncate" style="max-width: 200px;" id="modalLocation">-</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <a href="my-complaints.html" class="btn btn-primary flex-fill py-2 fw-semibold">
+                            <i class="bi bi-list-check me-1"></i> Track Complaint
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary flex-fill py-2" data-bs-dismiss="modal" onclick="resetForm()">
+                            Report Another
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <!-- App API & Managers -->
+    <script src="js/api.js"></script>
+    <script src="js/google-maps.js"></script>
+    <script src="js/gps-camera.js"></script>
+    <script src="js/report.js"></script>
+</body>
+</html>

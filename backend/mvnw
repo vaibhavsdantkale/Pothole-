@@ -1,0 +1,10 @@
+#!/bin/sh
+# Maven startup script for UNIX
+DIRNAME="$(dirname "$0")"
+if command -v mvn >/dev/null 2>&1; then
+    exec mvn "$@"
+else
+    echo "[INFO] Apache Maven was not found in PATH."
+    echo "[INFO] Please install Maven with: sudo apt install maven (or brew install maven)"
+    exit 1
+fi

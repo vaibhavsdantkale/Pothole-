@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register – PotholeAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-light">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <i class="bi bi-cone-striped text-warning fs-3 me-2"></i>
+                <span class="text-dark">Pothole<span class="text-primary">AI</span></span>
+            </a>
+            <div class="ms-auto">
+                <span class="text-muted small me-2">Already registered?</span>
+                <a href="login.html" class="btn btn-outline-primary btn-sm px-3">Sign In</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5 my-auto">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                    <div class="text-center mb-4">
+                        <div class="feature-icon-wrapper bg-success bg-opacity-10 text-success mx-auto mb-3">
+                            <i class="bi bi-person-plus-fill"></i>
+                        </div>
+                        <h3 class="fw-bold">Create Account</h3>
+                        <p class="text-muted small">Join our smart civic road maintenance network</p>
+                    </div>
+
+                    <div id="alertBox" class="alert d-none mb-3 py-2 small" role="alert"></div>
+
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                                <input type="text" id="name" class="form-control bg-light border-start-0" placeholder="e.g. John Doe" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                                <input type="email" id="email" class="form-control bg-light border-start-0" placeholder="name@example.com" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-key"></i></span>
+                                <input type="password" id="password" class="form-control bg-light border-start-0" placeholder="Minimum 6 characters" minlength="6" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold">Account Role</label>
+                            <select id="role" class="form-select bg-light">
+                                <option value="ROLE_USER" selected>Citizen Reporter (Submit & Track Potholes)</option>
+                                <option value="ROLE_ADMIN">Municipal Administrator (Inspect & Update Status)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-2 fw-semibold mb-3">
+                            <span id="btnSpinner" class="spinner-border spinner-border-sm me-2 d-none"></span>
+                            Create Account
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <a href="login.html" class="text-decoration-none small text-muted">
+                            Already have an account? <span class="text-primary fw-semibold">Log in</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const alertBox = document.getElementById('alertBox');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnSpinner = document.getElementById('btnSpinner');
+
+            alertBox.className = 'alert d-none';
+            submitBtn.disabled = true;
+            btnSpinner.classList.remove('d-none');
+
+            try {
+                const user = await API.register(name, email, password, role);
+                alertBox.className = 'alert alert-success py-2 small';
+                alertBox.textContent = 'Account created successfully! Redirecting...';
+
+                setTimeout(() => {
+                    if (user.role === 'ROLE_ADMIN') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        window.location.href = 'report.html';
+                    }
+                }, 900);
+            } catch (err) {
+                alertBox.className = 'alert alert-danger py-2 small';
+                alertBox.textContent = err.message || 'Registration failed. Please try again.';
+                submitBtn.disabled = false;
+                btnSpinner.classList.add('d-none');
+            }
+        });
+    </script>
+</body>
+</html>
